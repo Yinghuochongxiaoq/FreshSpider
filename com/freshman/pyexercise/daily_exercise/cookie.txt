@@ -1,0 +1,2 @@
+#LWP-Cookies-2.0
+Set-Cookie3: BAIDUID="E0B1E11615845C3B8A7954A3EFB512CF:FG=1"; path="/"; domain=".baidu.com"; path_spec; domain_dot; expires="2019-08-16 08:03:56Z"; version=0
