@@ -130,7 +130,7 @@ class WavTools(object):
         wav_out = wave.open(wav_path, "wb")
         wav_out.setnchannels(1)
         wav_out.setsampwidth(2)
-        wav_out.setframerate(8000)
+        wav_out.setframerate(16000)
         wav_out.writeframes(str_data)
 
     @staticmethod

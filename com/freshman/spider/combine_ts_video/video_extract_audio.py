@@ -1,6 +1,6 @@
 import os
 from ffmpy3 import FFmpeg
-
+from aip import AipSpeech
 from com.freshman.spider.common_util.wavTools import WavTools
 
 
@@ -75,14 +75,80 @@ class VideoExtractAudio(object):
             part_file_list.append(part_file_name)
         return part_file_list
 
+    def audio_to_word(self, audio_file):
+        """
+        从音频中提取文字
+        :param audio_file:音频地址
+        :return: 文字
+        """
+        file_content = self.get_file_content(audio_file)
+        APP_ID = "XXXXXX"
+        API_KEY = "XXXXXXXXXXXXX"
+        SECRET_KEY = "XXXXXXXXXXXXXXXXXXX"
+
+        client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
+
+        result = client.asr(file_content, 'wav', 16000, {'dev_pid': 1537})
+        if result is None or len(result) < 1:
+            print('调用百度api失败')
+            return []
+        else:
+            if result['err_no'] == 0:
+                print(f'识别结果：')
+                print(result['result'])
+                return result['result']
+            else:
+                print(f"识别错误：{result['err_msg']}")
+                return []
+
+    def get_file_content(self, file):
+        """
+        获取音频文件内容
+        :param file: 文件地址
+        :return: 文件内容
+        """
+        if os.path.exists(file):
+            with open(file, 'rb') as fp:
+                return fp.read()
+        return None
+
+    def get_video_core(self, video_file, out_core_dir, core_image_type="jpeg"):
+        """
+        获取视频关键帧
+        :param video_file: 视频文件路径
+        :param core_image_type: 图片文件后缀jpeg,png,jpg
+        :param out_core_dir: 图片保存目录
+        :return:
+        """
+        input_file = video_file
+        file_name = os.path.basename(input_file)
+        VideoExtractAudio.mk_dir_output(out_core_dir)
+        out_put_file = os.path.join(out_core_dir, file_name + "_%d." + core_image_type)
+        ff = FFmpeg(executable=self.executable,
+                    inputs={input_file: None},
+                    outputs={out_put_file: r"-vf select='eq(pict_type\,I)' -vsync 2 -s 1920*1080 -f image2"})
+        print(f'将通过命令执行视频关键帧提取：{ff.cmd}')
+        ff.run()
+        print(f'提取完成，文件路径：{out_put_file}')
+
 
 if __name__ == "__main__":
-    print(os.path.dirname(os.path.realpath(__file__)))
     video_path = os.path.dirname(os.path.realpath(__file__)) + "\\Video\\190318214226685784.mp4"
     audio_dir = os.path.dirname(os.path.realpath(__file__)) + "\\Audio"
+    video_core_dir = os.path.dirname(os.path.realpath(__file__)) + "\\Core"
     # FFmpeg的运行目录
     executable = "X:\\FFmpeg\\bin\\ffmpeg.exe"
 
+    # 初始化对象
     video_extract_audio = VideoExtractAudio(ffmpeg_executable=executable)
-    audio_path = video_extract_audio.video_to_wav(video_path, audio_dir)
-    video_extract_audio.wav_split(audio_path)
+    # 获取视频关键帧
+    video_extract_audio.get_video_core(video_path, video_core_dir)
+    # 视频中音频提取
+    # audio_path = video_extract_audio.video_to_wav(video_path, audio_dir)
+    # 音频切割
+    # part_file_list = video_extract_audio.wav_split(audio_path)
+    '''for item_part in part_file_list:
+        # 音频转为文字
+        # video_extract_audio.audio_to_word(item_part)
+    '''
+    print('处理完成')
