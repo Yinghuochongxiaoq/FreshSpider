@@ -26,11 +26,13 @@ class CombineVideo(object):
         获取ts文件路径
         :return:
         """
-        m3u8_obj = m3u8.load(self.m3u8_url)
+        m3u8_obj = m3u8.load(self.m3u8_url, headers=self.headers)
         base_url = m3u8_obj.base_uri
 
+        all_urls=[]
         for seg in m3u8_obj.segments:
-            yield urljoin(base_url, seg.uri)
+            all_urls.append(urljoin(base_url, seg.uri))
+        return all_urls
 
     def download_single_ts(self, url_info):
         """
@@ -97,14 +99,14 @@ class CombineVideo(object):
                 with open(ts, 'rb') as ft:
                     scline = ft.read()
                     fn.write(scline)
-        for ts in iglob(ts_path):
-            os.remove(ts)
+        # for ts in iglob(ts_path):
+        #     os.remove(ts)
 
 
 if __name__ == "__main__":
     start = time.time()
-
-    M3U8 = CombineVideo('https://zk.wb699.com/2019/03/06/aLdpUIBeHC48HGTk/playlist.m3u8')
+    m3u8_url = 'https://video.huishenghuo888888.com/putong/20200101/cMhYXApy/500kb/hls/index.m3u8'
+    M3U8 = CombineVideo(m3u8_url)
     M3U8.run()
 
     end = time.time()
